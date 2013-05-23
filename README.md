@@ -18,13 +18,15 @@ And then execute:
 
 Pickadate has a number of files associated with it. They are documented on the [pickadate repository](https://github.com/amsul/pickadate.js). Files in this gem are namespaced into a `pickadate` folder, and otherwise match the filenames from the pickadate repo.
 
-### Add the desired files to your javascript/coffeescript files (often `application.js` or `application.js.coffee`):
+### Add the desired files to your javascript/coffeescript
+Often done in `application.js`:
 
     //= require pickadate/picker # required
     //= require pickadate/picker.date # for the date picker
     //= require pickadate/picker.time # for the time picker
 
-### Add the stylesheets for the theme you want to your stylesheet file (often `application.css`)
+### Add the stylesheets for the theme you want
+Often done in `application.css`.
 
 For the default theme:
 
@@ -38,7 +40,7 @@ For the classic theme:
     *= require pickadate/classic.date
     *= require pickadate/classic.time
 
-### Localizations
+### Localization
 
 Translations are available by loading them in your javascript/coffeescript file. For example, in `application.js`
 
