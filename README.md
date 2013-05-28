@@ -1,6 +1,6 @@
 # Pickadate-Rails
 
-## Pickadate Version: 3.0.3
+## Pickadate Version: 3.0.4
 
 Easily add [pickadate.js](https://github.com/amsul/pickadate.js) to your Rails 3.1+ application using the asset pipeline.
 
