@@ -1,6 +1,6 @@
 
 /*!
- * Date picker for pickadate.js v3.0.5
+ * Date picker for pickadate.js v3.1.0
  * http://amsul.github.io/pickadate.js/date.htm
  */
 
@@ -32,7 +32,10 @@ var DAYS_IN_WEEK = 7,
 function DatePicker( picker, settings ) {
 
     var calendar = this,
-        elementDataValue = picker.$node.data( 'value' )
+        elementValue = picker.$node[ 0 ].value,
+        elementDataValue = picker.$node.data( 'value' ),
+        valueString = elementDataValue || elementValue,
+        formatString = elementDataValue ? settings.formatSubmit : settings.format
 
     calendar.settings = settings
 
@@ -64,12 +67,18 @@ function DatePicker( picker, settings ) {
         // Setting the `select` also sets the `highlight` and `view`.
         set( 'select',
 
-            // If there's a `value` or `data-value`, use that with formatting.
-            // Otherwise default to selecting “today”.
-            elementDataValue || picker.$node[ 0 ].value || calendar.item.now,
+            // Use the value provided or default to selecting “today”.
+            valueString || calendar.item.now,
+            {
+                // Use the appropriate format.
+                format: formatString,
 
-            // Use the relevant format and data property.
-            { format: elementDataValue ? settings.formatSubmit : settings.format, data: !!elementDataValue }
+                // Set user-provided month data as true when there is a
+                // “mm” or “m” used in the relative format string.
+                data: (function( formatArray ) {
+                    return valueString && ( formatArray.indexOf( 'mm' ) > -1 || formatArray.indexOf( 'm' ) > -1 )
+                })( calendar.formats.toArray( formatString ) )
+            }
         )
 
 
@@ -170,9 +179,11 @@ DatePicker.prototype.create = function( type, value, options ) {
         value = value.obj
     }
 
-    // If it’s an array, convert it into a date.
+    // If it’s an array, convert it into a date and make sure
+    // that it’s a valid date – otherwise default to today.
     else if ( Array.isArray( value ) ) {
         value = new Date( value[ 0 ], value[ 1 ], value[ 2 ] )
+        value = Picker._.isDate( value ) ? value : calendar.create().obj
     }
 
     // If it’s a number or date object, make a normalized date.
@@ -221,9 +232,9 @@ DatePicker.prototype.navigate = function( type, value, options ) {
             month = targetDateObject.getMonth(),
             date = value.date
 
-        // If the month we’re going to doesn’t have enough days,
-        // keep decreasing the date until we reach the month’s last date.
-        while ( new Date( year, month, date ).getMonth() !== month ) {
+        // Make sure the date is valid and if the month we’re going to doesn’t have enough
+        // days, keep decreasing the date until we reach the month’s last date.
+        while ( Picker._.isDate( targetDateObject ) && new Date( year, month, date ).getMonth() !== month ) {
             date -= 1
         }
 
@@ -447,7 +458,7 @@ DatePicker.prototype.parse = function( type, value, options ) {
         value = value.substr( formatLength )
     })
 
-    // If it’s parsing a `data-value`, compensate for month 0index.
+    // If it’s parsing a user provided month value, compensate for month 0index.
     return [ parsingObject.yyyy || parsingObject.yy, +( parsingObject.mm || parsingObject.m ) - ( options.data ?  1 : 0 ), parsingObject.dd || parsingObject.d ]
 } //DatePicker.prototype.parse
 
