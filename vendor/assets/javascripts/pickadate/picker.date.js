@@ -1,6 +1,6 @@
 
 /*!
- * Date picker for pickadate.js v3.1.1
+ * Date picker for pickadate.js v3.1.2
  * http://amsul.github.io/pickadate.js/date.htm
  */
 
@@ -331,11 +331,11 @@ DatePicker.prototype.validate = function( type, dateObject, options ) {
     // [3] Out of range.
     //
     // Cases to **not** validate for:
+    // • Navigating months.
     // • Not inverted and date enabled.
     // • Inverted and all dates disabled.
-    // • Navigating months.
     // • ..and anything else.
-    if (
+    if ( !options.nav ) if (
         /* 1 */ ( !isInverted && calendar.disabled( dateObject ) ) ||
         /* 2 */ ( isInverted && calendar.disabled( dateObject ) && ( hasEnabledWeekdays || hasEnabledBeforeTarget || hasEnabledAfterTarget ) ) ||
         /* 3 */ ( dateObject.pick <= minLimitObject.pick || dateObject.pick >= maxLimitObject.pick )
