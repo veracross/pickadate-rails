@@ -1,6 +1,6 @@
 # Pickadate-Rails [![Gem Version](https://badge.fury.io/rb/pickadate-rails.png)](http://badge.fury.io/rb/pickadate-rails)
 
-## Pickadate Version: 3.1.1
+## Pickadate Version: 3.1.2
 
 Easily add [pickadate.js](https://github.com/amsul/pickadate.js) to your Rails 3.1+ application using the asset pipeline.
 
@@ -50,14 +50,12 @@ Translations are available by loading them in your javascript/coffeescript file.
 
 This project will use Semantic Versioning and follow Pickadate itself as much as possible in terms of major, minor, and patch level bumps. Version 1.0 of this gem starts with Pickadate version 3.0.3.
 
+## Updating
 
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+1. Run `rake pickadate:download`
+2. Update `lib/pickadate-rails/version`
+3. Update the version number in the Readme
+4. Create a pull request
 
 ## License
 Pickadate itself and this gem are under the MIT license.
