@@ -1,6 +1,6 @@
 
 /*!
- * Time picker for pickadate.js v3.1.2
+ * Time picker for pickadate.js v3.1.3
  * http://amsul.github.io/pickadate.js/time.htm
  */
 
@@ -370,7 +370,7 @@ TimePicker.prototype.parse = function( type, value, options ) {
         clock = this,
         parsingObject = {}
 
-    if ( !value || Picker._.isInteger( value ) || Array.isArray( value ) || Picker._.isDate( value ) || Picker._.isObject( value ) && Picker._.isInteger( value.pick ) ) {
+    if ( !value || Picker._.isInteger( value ) || Array.isArray( value ) || Picker._.isDate( value ) || Picker._.isObject( value ) && Picker._.isInteger( value.pick ) ) {
         return value
     }
 
