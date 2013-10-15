@@ -1,42 +1,6 @@
 /* ==========================================================================
    $BASE-DATE-PICKER
    ========================================================================== */
-/* ==========================================================================
-   $VARIABLES
-   ========================================================================== */
-/**
- * Base colors
- */
-/**
- * Backgrounds
- */
-/**
- * Borders
- */
-/**
- * Buttons
- */
-/**
- * Picker base
- */
-/**
- * Date picker options
- */
-/**
- * Theme configurations
- */
-/* ==========================================================================
-   $MIXINS
-   ========================================================================== */
-/**
- * Common picker item states
- */
-/**
- * Opacity
- */
-/**
- * Vendor prefixes
- */
 /**
  * The picker box.
  */
@@ -74,7 +38,7 @@
   font-size: .8em;
   border: 1px solid #b7b7b7;
   height: 2.5em;
-  padding: .66em .25em;
+  padding: .5em .25em;
   margin-left: .25em;
   margin-right: .25em;
   margin-top: -0.5em;
@@ -211,10 +175,6 @@
 }
 .picker__day--outfocus {
   color: #dddddd;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=66)";
-  filter: alpha(opacity=66);
-  -moz-opacity: 0.66;
-  opacity: 0.66;
 }
 .picker__day--infocus:hover,
 .picker__day--outfocus:hover {
@@ -294,39 +254,3 @@
 /* ==========================================================================
    $DEFAULT-DATE-PICKER
    ========================================================================== */
-/* ==========================================================================
-   $VARIABLES
-   ========================================================================== */
-/**
- * Base colors
- */
-/**
- * Backgrounds
- */
-/**
- * Borders
- */
-/**
- * Buttons
- */
-/**
- * Picker base
- */
-/**
- * Date picker options
- */
-/**
- * Theme configurations
- */
-/* ==========================================================================
-   $MIXINS
-   ========================================================================== */
-/**
- * Common picker item states
- */
-/**
- * Opacity
- */
-/**
- * Vendor prefixes
- */

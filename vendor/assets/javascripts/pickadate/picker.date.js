@@ -1,6 +1,6 @@
 
 /*!
- * Date picker for pickadate.js v3.2.2
+ * Date picker for pickadate.js v3.3.0
  * http://amsul.github.io/pickadate.js/date.htm
  */
 
@@ -17,12 +17,12 @@
 
     // Register as an anonymous module.
     if ( typeof define === 'function' && define.amd )
-        define( ['picker'], factory )
+        define( ['picker','jquery'], factory )
 
     // Or using browser globals.
-    else factory( Picker )
+    else factory( Picker, jQuery )
 
-}(function( Picker ) {
+}(function( Picker, $ ) {
 
 
 /**
@@ -42,7 +42,10 @@ function DatePicker( picker, settings ) {
         elementValue = picker.$node[ 0 ].value,
         elementDataValue = picker.$node.data( 'value' ),
         valueString = elementDataValue || elementValue,
-        formatString = elementDataValue ? settings.formatSubmit : settings.format
+        formatString = elementDataValue ? settings.formatSubmit : settings.format,
+        isRTL = function() {
+            return getComputedStyle( picker.$root[0] ).direction === 'rtl'
+        }
 
     calendar.settings = settings
 
@@ -93,8 +96,8 @@ function DatePicker( picker, settings ) {
     calendar.key = {
         40: 7, // Down
         38: -7, // Up
-        39: 1, // Right
-        37: -1, // Left
+        39: function() { return isRTL() ? -1 : 1 }, // Right
+        37: function() { return isRTL() ? 1 : -1 }, // Left
         go: function( timeChange ) {
             calendar.set( 'highlight', [ calendar.item.highlight.year, calendar.item.highlight.month, calendar.item.highlight.date + timeChange ], { interval: timeChange } )
             this.render()
@@ -107,11 +110,11 @@ function DatePicker( picker, settings ) {
         on( 'render', function() {
             picker.$root.find( '.' + settings.klass.selectMonth ).on( 'change', function() {
                 picker.set( 'highlight', [ picker.get( 'view' ).year, this.value, picker.get( 'highlight' ).date ] )
-                picker.$root.find( '.' + settings.klass.selectMonth ).focus()
+                picker.$root.find( '.' + settings.klass.selectMonth ).trigger( 'focus' )
             })
             picker.$root.find( '.' + settings.klass.selectYear ).on( 'change', function() {
                 picker.set( 'highlight', [ this.value, picker.get( 'view' ).month, picker.get( 'highlight' ).date ] )
-                picker.$root.find( '.' + settings.klass.selectYear ).focus()
+                picker.$root.find( '.' + settings.klass.selectYear ).trigger( 'focus' )
             })
         }).
         on( 'open', function() {
@@ -397,32 +400,33 @@ DatePicker.prototype.validate = function( type, dateObject, options ) {
 
 
 /**
- * Check if an object is disabled.
+ * Check if a date is disabled.
  */
 DatePicker.prototype.disabled = function( dateObject ) {
 
     var calendar = this,
 
         // Filter through the disabled dates to check if this is one.
-        isDisabledDate = calendar.item.disable.filter( function( dateToDisable ) {
+        isDisabledDate = !!calendar.item.disable.filter( function( dateToDisable ) {
 
             // If the date is a number, match the weekday with 0index and `firstDay` check.
             if ( Picker._.isInteger( dateToDisable ) ) {
                 return dateObject.day === ( calendar.settings.firstDay ? dateToDisable : dateToDisable - 1 ) % 7
             }
 
-            // If it's an array, create the object and match the exact date.
-            if ( $.isArray( dateToDisable ) ) {
+            // If it’s an array or a native JS date, create and match the exact date.
+            if ( $.isArray( dateToDisable ) || Picker._.isDate( dateToDisable ) ) {
                 return dateObject.pick === calendar.create( dateToDisable ).pick
             }
         }).length
 
 
-    // It’s disabled beyond the min/max limits. If within the limits, check the
-    // calendar “enabled” flag is flipped and respectively flip the condition.
-    return dateObject.pick < calendar.item.min.pick ||
-        dateObject.pick > calendar.item.max.pick ||
-        calendar.item.enable === -1 ? !isDisabledDate : isDisabledDate
+    // Check the calendar “enabled” flag and respectively flip the
+    // disabled state. Then also check if it’s beyond the min/max limits.
+    return calendar.item.enable === -1 ? !isDisabledDate : isDisabledDate ||
+        dateObject.pick < calendar.item.min.pick ||
+        dateObject.pick > calendar.item.max.pick
+
 } //DatePicker.prototype.disabled
 
 
@@ -590,12 +594,28 @@ DatePicker.prototype.flipItem = function( type, value/*, options*/ ) {
         calendar.item.enable = isInverted ? 1 : -1
     }
 
-    // Check if we have to add/remove from collection.
-    else if ( !isInverted && type == 'enable' || isInverted && type == 'disable' ) {
-        collection = calendar.removeDisabled( collection, value )
+    // Reset the collection and enable the base state.
+    else if ( ( type == 'enable' && value === true ) || ( type == 'disable' && value === false ) ) {
+        calendar.item.enable = 1
+        collection = []
     }
-    else if ( !isInverted && type == 'disable' || isInverted && type == 'enable' ) {
-        collection = calendar.addDisabled( collection, value )
+
+    // Reset the collection and disable the base state.
+    else if ( ( type == 'enable' && value === false ) || ( type == 'disable' && value === true ) ) {
+        calendar.item.enable = -1
+        collection = []
+    }
+
+    // Make sure a collection of things was passed to add/remove.
+    else if ( $.isArray( value ) ) {
+
+        // Check if we have to add/remove from collection.
+        if ( !isInverted && type == 'enable' || isInverted && type == 'disable' ) {
+            collection = calendar.removeDisabled( collection, value )
+        }
+        else if ( !isInverted && type == 'disable' || isInverted && type == 'enable' ) {
+            collection = calendar.addDisabled( collection, value )
+        }
     }
 
     return collection
@@ -632,10 +652,24 @@ DatePicker.prototype.removeDisabled = function( collection, item ) {
  * Filter through the disabled collection to find a time unit.
  */
 DatePicker.prototype.filterDisabled = function( collection, timeUnit, isRemoving ) {
-    var timeIsArray = $.isArray( timeUnit )
+
+    var calendar = this,
+
+        // Check if the time unit passed is an array or date object.
+        timeIsObject = $.isArray( timeUnit ) || Picker._.isDate( timeUnit ),
+
+        // Grab the comparison value if it’s an object.
+        timeObjectValue = timeIsObject && calendar.create( timeUnit ).pick
+
+    // Go through the disabled collection and try to match this time unit.
     return collection.filter( function( disabledTimeUnit ) {
-        var isMatch = !timeIsArray && timeUnit === disabledTimeUnit ||
-            timeIsArray && $.isArray( disabledTimeUnit ) && timeUnit.toString() === disabledTimeUnit.toString()
+
+        // Check if it’s an object and the collection item is an object,
+        // use the comparison values. Otherwise to a direct comparison.
+        var isMatch = timeIsObject && ( $.isArray( disabledTimeUnit ) || Picker._.isDate( disabledTimeUnit ) ) ?
+                timeObjectValue === calendar.create( disabledTimeUnit ).pick : timeUnit === disabledTimeUnit
+
+        // Invert the match if we’re removing from the collection.
         return isRemoving ? !isMatch : isMatch
     })
 } //DatePicker.prototype.filterDisabled
@@ -881,10 +915,11 @@ DatePicker.prototype.nodes = function( isOpen ) {
         settings.klass.table
     ) +
 
+    // * For Firefox forms to submit, make sure to set the buttons’ `type` attributes as “button”.
     Picker._.node(
         'div',
-        Picker._.node( 'button', settings.today, settings.klass.buttonToday, 'data-pick=' + nowObject.pick + ( isOpen ? '' : ' disabled' ) ) +
-        Picker._.node( 'button', settings.clear, settings.klass.buttonClear, 'data-clear=1' + ( isOpen ? '' : ' disabled' ) ),
+        Picker._.node( 'button', settings.today, settings.klass.buttonToday, 'type=button data-pick=' + nowObject.pick + ( isOpen ? '' : ' disabled' ) ) +
+        Picker._.node( 'button', settings.clear, settings.klass.buttonClear, 'type=button data-clear=1' + ( isOpen ? '' : ' disabled' ) ),
         settings.klass.footer
     ) //endreturn
 } //DatePicker.prototype.nodes

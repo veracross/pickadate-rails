@@ -1,6 +1,6 @@
 
 /*!
- * pickadate.js v3.2.2, 2013/09/19
+ * pickadate.js v3.3.0, 2013/10/13
  * By Amsul, http://amsul.ca
  * Hosted on http://amsul.github.io/pickadate.js
  * Licensed under MIT
@@ -152,11 +152,26 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     }) //P.$root
 
 
-                // If there’s a format for the hidden input element, create the element
-                // using the name of the original input plus suffix. Otherwise set it to undefined.
-                // If the element has a value, use either the `data-value` or `value`.
+                // If there’s a format for the hidden input element, create the element.
                 if ( SETTINGS.formatSubmit ) {
-                    P._hidden = $( '<input type=hidden name="' + ELEMENT.name + ( SETTINGS.hiddenSuffix || '_submit' ) + '"' + ( $ELEMENT.data( 'value' ) ? ' value="' + PickerConstructor._.trigger( P.component.formats.toString, P.component, [ SETTINGS.formatSubmit, P.component.item.select ] ) + '"' : '' ) + '>' )[ 0 ]
+
+                    P._hidden = $(
+                        '<input ' +
+                        'type=hidden ' +
+
+                        // Create the name by using the original input plus a prefix and suffix.
+                        'name="' + ( typeof SETTINGS.hiddenPrefix == 'string' ? SETTINGS.hiddenPrefix : '' ) +
+                            ELEMENT.name +
+                            ( typeof SETTINGS.hiddenSuffix == 'string' ? SETTINGS.hiddenSuffix : '_submit' ) +
+                        '"' +
+
+                        // If the element has a `data-value`, set the element `value` as well.
+                        ( $ELEMENT.data( 'value' ) ?
+                            ' value="' + PickerConstructor._.trigger( P.component.formats.toString, P.component, [ SETTINGS.formatSubmit, P.component.item.select ] ) + '"' :
+                            ''
+                        ) +
+                        '>'
+                    )[ 0 ]
                 }
 
 
@@ -317,7 +332,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     STATE.open = true
 
                     // Pass focus to the element’s jQuery object.
-                    $ELEMENT.focus()
+                    $ELEMENT.trigger( 'focus' )
 
                     // Bind the document events.
                     $document.on( 'click.P' + STATE.id + ' focusin.P' + STATE.id, function( event ) {
@@ -355,7 +370,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
                             // Trigger the key movement action.
                             if ( keycodeToMove ) {
-                                PickerConstructor._.trigger( P.component.key.go, P, [ keycodeToMove ] )
+                                PickerConstructor._.trigger( P.component.key.go, P, [ PickerConstructor._.trigger( keycodeToMove ) ] )
                             }
 
                             // On “enter”, if the highlighted item isn’t disabled, set the value and close.
@@ -389,7 +404,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     // ....ah yes! It would’ve been incomplete without a crazy workaround for IE :|
                     // The focus is triggered *after* the close has completed - causing it
                     // to open again. So unbind and rebind the event at the next tick.
-                    $ELEMENT.off( 'focus.P' + STATE.id ).focus()
+                    $ELEMENT.off( 'focus.P' + STATE.id ).trigger( 'focus' )
                     setTimeout( function() {
                         $ELEMENT.on( 'focus.P' + STATE.id, focusToOpen )
                     }, 0 )

@@ -1,6 +1,6 @@
 
 /*!
- * Time picker for pickadate.js v3.2.2
+ * Time picker for pickadate.js v3.3.0
  * http://amsul.github.io/pickadate.js/time.htm
  */
 
@@ -17,12 +17,12 @@
 
     // Register as an anonymous module.
     if ( typeof define === 'function' && define.amd )
-        define( ['picker'], factory )
+        define( ['picker','jquery'], factory )
 
     // Or using browser globals.
-    else factory( Picker )
+    else factory( Picker, jQuery )
 
-}(function( Picker ) {
+}(function( Picker, $ ) {
 
 
 /**
@@ -102,10 +102,7 @@ function TimePicker( picker, settings ) {
             var $pickerHolder = picker.$root.children(),
                 $viewset = $pickerHolder.find( '.' + settings.klass.viewset )
             if ( $viewset.length ) {
-                $pickerHolder[ 0 ].scrollTop = ~~( $viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 ) )
-            }
-            else {
-                console.warn( 'Nothing to viewset with', clock.item.view )
+                $pickerHolder[ 0 ].scrollTop += $viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 )
             }
         }).
         on( 'open', function() {
@@ -197,7 +194,7 @@ TimePicker.prototype.create = function( type, value, options ) {
     }
 
     // Normalize it into a "reachable" interval.
-    value = clock.normalize( value, options )
+    value = clock.normalize( type, value, options )
 
     // Return the compiled object.
     return {
@@ -243,11 +240,19 @@ TimePicker.prototype.now = function( type, value/*, options*/ ) {
 
 
 /**
- * Normalize minutes or an object to be "reachable" based on the interval.
+ * Normalize minutes to be “reachable” based on the min and interval.
  */
-TimePicker.prototype.normalize = function( value/*, options*/ ) {
-    // If it's a negative value, add one interval to keep it as "passed".
-    return value - ( ( value < 0 ? this.item.interval : 0 ) + value % this.item.interval )
+TimePicker.prototype.normalize = function( type, value/*, options*/ ) {
+
+    var minObject = this.item.min, interval = this.item.interval,
+
+        // If setting min and it doesn’t exist, don’t shift anything.
+        // Otherwise get the value and min difference and then
+        // normalize the difference with the interval.
+        difference = type == 'min' && !minObject ? 0 : ( value - minObject.pick ) % interval
+
+    // If it’s a negative value, add one interval to keep it as “passed”.
+    return value - ( difference + ( value < 0 ? interval : 0 ) )
 } //TimePicker.prototype.normalize
 
 
@@ -270,7 +275,7 @@ TimePicker.prototype.measure = function( type, value, options ) {
 
     // If it's an object already, just normalize it.
     else if ( Picker._.isObject( value ) && Picker._.isInteger( value.pick ) ) {
-        value = clock.normalize( value.pick, options )
+        value = clock.normalize( type, value.pick, options )
     }
 
     return value
@@ -338,17 +343,20 @@ TimePicker.prototype.disabled = function( timeObject ) {
  */
 TimePicker.prototype.shift = function( timeObject, interval ) {
 
-    var
-        clock = this
+    var clock = this,
+        minLimit = clock.item.min.pick,
+        maxLimit = clock.item.max.pick
+
+    interval = interval || clock.item.interval
 
     // Keep looping as long as the time is disabled.
     while ( clock.disabled( timeObject ) ) {
 
         // Increase/decrease the time by the interval and keep looping.
-        timeObject = clock.create( timeObject.pick += interval || clock.item.interval )
+        timeObject = clock.create( timeObject.pick += interval )
 
         // If we've looped beyond the limits, break out of the loop.
-        if ( timeObject.pick <= clock.item.min.pick || timeObject.pick >= clock.item.max.pick ) {
+        if ( timeObject.pick <= minLimit || timeObject.pick >= maxLimit ) {
             break
         }
     }
@@ -373,8 +381,7 @@ TimePicker.prototype.scope = function( timeObject ) {
  */
 TimePicker.prototype.parse = function( type, value, options ) {
 
-    var
-        clock = this,
+    var clock = this,
         parsingObject = {}
 
     if ( !value || Picker._.isInteger( value ) || $.isArray( value ) || Picker._.isDate( value ) || Picker._.isObject( value ) && Picker._.isInteger( value.pick ) ) {
@@ -491,12 +498,28 @@ TimePicker.prototype.flipItem = function( type, value/*, options*/ ) {
         clock.item.enable = isFlipped ? 1 : -1
     }
 
-    // Check if we have to add/remove from collection.
-    else if ( !isFlipped && type == 'enable' || isFlipped && type == 'disable' ) {
-        collection = clock.removeDisabled( collection, value )
+    // Reset the collection and enable the base state.
+    else if ( ( type == 'enable' && value === true ) || ( type == 'disable' && value === false ) ) {
+        clock.item.enable = 1
+        collection = []
     }
-    else if ( !isFlipped && type == 'disable' || isFlipped && type == 'enable' ) {
-        collection = clock.addDisabled( collection, value )
+
+    // Reset the collection and disable the base state.
+    else if ( ( type == 'enable' && value === false ) || ( type == 'disable' && value === true ) ) {
+        clock.item.enable = -1
+        collection = []
+    }
+
+    // Make sure a collection of things was passed to add/remove.
+    else if ( $.isArray( value ) ) {
+
+        // Check if we have to add/remove from collection.
+        if ( !isFlipped && type == 'enable' || isFlipped && type == 'disable' ) {
+            collection = clock.removeDisabled( collection, value )
+        }
+        else if ( !isFlipped && type == 'disable' || isFlipped && type == 'enable' ) {
+            collection = clock.addDisabled( collection, value )
+        }
     }
 
     return collection
@@ -508,7 +531,8 @@ TimePicker.prototype.flipItem = function( type, value/*, options*/ ) {
  */
 TimePicker.prototype.addDisabled = function( collection, item ) {
     var clock = this
-    item.map( function( timeUnit ) {
+    if ( item === false ) collection = []
+    else item.map( function( timeUnit ) {
         if ( !clock.filterDisabled( collection, timeUnit ).length ) {
             collection.push( timeUnit )
         }
@@ -595,7 +619,10 @@ TimePicker.prototype.nodes = function( isOpen ) {
                 'data-pick=' + loopedTime.pick
             ]
         }
-    }) + Picker._.node( 'li', Picker._.node( 'button', settings.clear, settings.klass.buttonClear, 'data-clear=1' + ( isOpen ? '' : ' disable' ) ) ), settings.klass.list )
+    }) +
+
+    // * For Firefox forms to submit, make sure to set the button’s `type` attribute as “button”.
+    Picker._.node( 'li', Picker._.node( 'button', settings.clear, settings.klass.buttonClear, 'type=button data-clear=1' + ( isOpen ? '' : ' disable' ) ) ), settings.klass.list )
 } //TimePicker.prototype.nodes
 
 
