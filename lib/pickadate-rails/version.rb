@@ -1,3 +1,3 @@
 module PickadateRails
-  VERSION = "1.5.0"
+  VERSION = "3.5.2.0"
 end

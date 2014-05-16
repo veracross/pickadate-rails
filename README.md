@@ -1,6 +1,6 @@
 # Pickadate-Rails [![Gem Version](https://badge.fury.io/rb/pickadate-rails.png)](http://badge.fury.io/rb/pickadate-rails)
 
-## Pickadate Version: 3.5.0
+## Pickadate Version: 3.5.2.0
 
 Easily add [pickadate.js](https://github.com/amsul/pickadate.js) to your Rails 3.1+ application using the asset pipeline.
 
@@ -48,7 +48,7 @@ Translations are available by loading them in your javascript/coffeescript file.
 
 ## Versioning
 
-This project will use Semantic Versioning and follow Pickadate itself as much as possible in terms of major, minor, and patch level bumps. Version 1.0 of this gem starts with Pickadate version 3.0.3.
+Starting with version 3.5.2.0 of this gem, we have switched to matching the gem version with pickadate's current version number. We'll use the tiny version number for changes to the gem itself. Therefore, the gem version jumps from 1.5 (bundling pickadate 3.5) to 3.5.2.0 (bundling pickadate 3.5.2).
 
 ## Updating
 
