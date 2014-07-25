@@ -1,6 +1,6 @@
 # Pickadate-Rails [![Gem Version](https://badge.fury.io/rb/pickadate-rails.png)](http://badge.fury.io/rb/pickadate-rails)
 
-## Pickadate Version: 3.5.2.0
+## Pickadate Version: 3.5.3
 
 Easily add [pickadate.js](https://github.com/amsul/pickadate.js) to your Rails 3.1+ application using the asset pipeline.
 
