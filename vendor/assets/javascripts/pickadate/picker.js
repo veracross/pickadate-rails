@@ -1,5 +1,5 @@
 /*!
- * pickadate.js v3.5.4, 2014/09/11
+ * pickadate.js v3.5.3, 2014/07/12
  * By Amsul, http://amsul.ca
  * Hosted on http://amsul.github.io/pickadate.js
  * Licensed under MIT
@@ -684,7 +684,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
             }).
 
             // If there’s a click on an actionable element, carry out the actions.
-            on( 'click', '[data-pick], [data-nav], [data-clear], [data-close]', function() {
+            on( 'click', '[data-pick], [data-nav], [data-clear]', function() {
 
                 var $target = $( this ),
                     targetData = $target.data(),
@@ -701,12 +701,12 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                 }
 
                 // If something is superficially changed, update the `highlight` based on the `nav`.
-                if ( !targetDisabled && targetData.nav ) {
+                if ( targetData.nav && !targetDisabled ) {
                     P.set( 'highlight', P.component.item.highlight, { nav: targetData.nav } )
                 }
 
                 // If something is picked, set `select` then close with focus.
-                else if ( !targetDisabled && 'pick' in targetData ) {
+                else if ( PickerConstructor._.isInteger( targetData.pick ) && !targetDisabled ) {
                     P.set( 'select', targetData.pick ).close( true )
                 }
 
@@ -714,11 +714,9 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                 else if ( targetData.clear ) {
                     P.clear().close( true )
                 }
-
-                else if ( targetData.close ) {
-                    P.close( true )
-                }
-
+            })
+            .on('click', '[data-close]', function () {
+                P.close(true);
             }) //P.$root
 
         aria( P.$root[0], 'hidden', true )
@@ -750,6 +748,9 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
             // Create the name using the original input’s with a prefix and suffix.
             'name="' + name + '"' +
+
+            // Create the ID using the original input’s; only if it has one.
+            (ELEMENT.id ? 'id="' + ELEMENT.id + '_hidden"' : '') +
 
             // If the element has a value, set the hidden value as well.
             (
@@ -978,7 +979,7 @@ PickerConstructor._ = {
      * Tell if something is a date object.
      */
     isDate: function( value ) {
-        return {}.toString.call( value ).indexOf( 'Date' ) > -1 && this.isInteger( value.getUTCDate() )
+        return {}.toString.call( value ).indexOf( 'Date' ) > -1 && this.isInteger( value.getDate() )
     },
 
 
