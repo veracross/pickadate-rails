@@ -12,13 +12,6 @@
  * Legacy browser support
  */
 
-// isArray support
-if ( !Array.isArray ) {
-    Array.isArray = function( value ) {
-        return {}.toString.call( value ) == '[object Array]'
-    }
-}
-
 
 // Map array support
 if ( ![].map ) {
@@ -137,4 +130,4 @@ String.prototype.split = function(separator, limit) {
         output.push(str.slice(lastLastIndex))
     }
     return output.length > limit ? output.slice(0, limit) : output
-}
+};

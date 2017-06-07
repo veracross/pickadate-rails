@@ -5,7 +5,7 @@ namespace :pickadate do
   task :download do
     require 'fileutils'
 
-    system "curl https://github.com/amsul/pickadate.js/archive/master.zip -f -L --create-dirs -o tmp/pickadate.zip"
+    system "curl https://github.com/kasparsj/pickadate.js/archive/master.zip -f -L --create-dirs -o tmp/pickadate.zip"
     system "unzip -o tmp/pickadate.zip -d tmp/"
     system "rm tmp/pickadate.zip"
 
